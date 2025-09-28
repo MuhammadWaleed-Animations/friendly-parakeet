@@ -1,5 +1,6 @@
 # Attack Me 🛒 - Vulnerable E-Commerce Site
 
+
 A deliberately vulnerable Next.js e-commerce application designed for educational purposes and security testing. This site appears as a legitimate online store but contains numerous intentional security vulnerabilities.
 
 ## ⚠️ WARNING
