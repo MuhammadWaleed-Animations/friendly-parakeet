@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Attack Me - Vulnerable Next.js App",
-  description: "A deliberately vulnerable Next.js application for security testing and learning",
+  title: "Attack Me - Premium E-Commerce Store",
+  description: "Shop the latest electronics, fashion, and gaming products at Attack Me - your trusted online store",
 };
 
 export default function RootLayout({

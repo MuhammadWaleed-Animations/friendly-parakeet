@@ -1,58 +1,121 @@
-import Link from "next/link";
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { Card, Button, Input, Badge, Avatar, Dropdown, Menu, Space, Row, Col, Typography, Rate } from 'antd';
+import { SearchOutlined, ShoppingCartOutlined, UserOutlined, LogoutOutlined, LoginOutlined, HeartOutlined } from '@ant-design/icons';
+import { Product } from '../../lib/database';
+import Header from './components/Header';
+import ProductCard from './components/ProductCard';
+import HeroSection from './components/HeroSection';
+import CategorySection from './components/CategorySection';
+import Footer from './components/Footer';
+
+const { Search } = Input;
+const { Title, Paragraph } = Typography;
 
 export default function Home() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [cartCount, setCartCount] = useState(0);
+
+  useEffect(() => {
+    fetchProducts();
+    checkAuth();
+    fetchCartCount();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('/api/products');
+      const data = await response.json();
+      setProducts(data.products.slice(0, 8)); // Show first 8 products
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      setLoading(false);
+    }
+  };
+
+  const checkAuth = () => {
+    // VULNERABILITY: Client-side auth check - can be bypassed
+    const token = document.cookie.split(';').find(c => c.trim().startsWith('auth-token='));
+    if (token) {
+      // In a real app, you'd verify the token
+      setUser({ name: 'John Doe', email: 'john@example.com' });
+    }
+  };
+
+  const fetchCartCount = async () => {
+    try {
+      const response = await fetch('/api/cart');
+      if (response.ok) {
+        const data = await response.json();
+        setCartCount(data.cartItems.length);
+      }
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
+  };
+
+  const handleSearch = async (value: string) => {
+    try {
+      const response = await fetch(`/api/products?search=${encodeURIComponent(value)}`);
+      const data = await response.json();
+      setProducts(data.products);
+    } catch (error) {
+      console.error('Error searching products:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setUser(null);
+      setCartCount(0);
+    } catch (error) {
+      console.error('Error logging out:', error);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-900 via-red-800 to-red-700">
-      <div className="container mx-auto px-4 py-16">
-        <main className="text-center text-white">
-          <h1 className="text-6xl md:text-8xl font-bold mb-6 drop-shadow-2xl">
-            🚨 Attack Me
-          </h1>
-          
-          <p className="text-xl md:text-2xl mb-8 text-red-100 max-w-3xl mx-auto">
-            A deliberately vulnerable Next.js application for security testing and learning
-          </p>
-          
-          <div className="bg-yellow-500/20 border-2 border-yellow-400 rounded-lg p-6 mb-12 max-w-4xl mx-auto">
-            <h2 className="text-2xl font-bold text-yellow-300 mb-4">⚠️ Warning</h2>
-            <p className="text-lg mb-2">This application contains intentional security vulnerabilities for educational purposes only.</p>
-            <p className="text-lg font-semibold text-yellow-200">Do not use in production environments!</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-12">
-            <Link 
-              href="/vulnerabilities" 
-              className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105"
-            >
-              <h3 className="text-2xl font-bold mb-3">🔍 Vulnerabilities</h3>
-              <p className="text-red-100">Explore intentional security flaws</p>
-            </Link>
-            
-            <Link 
-              href="/about" 
-              className="bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105"
-            >
-              <h3 className="text-2xl font-bold mb-3">📚 About</h3>
-              <p className="text-red-100">Learn about this project</p>
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
-            <div className="bg-red-800/30 backdrop-blur-sm rounded-lg p-4">
-              <h4 className="font-bold text-lg mb-2">💉 SQL Injection</h4>
-              <p className="text-sm text-red-200">Database vulnerabilities</p>
-            </div>
-            <div className="bg-red-800/30 backdrop-blur-sm rounded-lg p-4">
-              <h4 className="font-bold text-lg mb-2">🎯 XSS</h4>
-              <p className="text-sm text-red-200">Cross-site scripting</p>
-            </div>
-            <div className="bg-red-800/30 backdrop-blur-sm rounded-lg p-4">
-              <h4 className="font-bold text-lg mb-2">🔄 CSRF</h4>
-              <p className="text-sm text-red-200">Request forgery</p>
-            </div>
-          </div>
-        </main>
+    <div className="min-h-screen bg-gray-50">
+      <Header 
+        user={user} 
+        cartCount={cartCount} 
+        onLogout={handleLogout}
+        onSearch={handleSearch}
+      />
+      
+      <HeroSection />
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center mb-12">
+          <Title level={2}>Featured Products</Title>
+          <Paragraph className="text-lg text-gray-600">
+            Discover our most popular items
+          </Paragraph>
+        </div>
+        
+        <Row gutter={[24, 24]}>
+          {products.map((product) => (
+            <Col xs={24} sm={12} md={8} lg={6} key={product.id}>
+              <ProductCard product={product} />
+            </Col>
+          ))}
+        </Row>
+        
+        <div className="text-center mt-12">
+          <Button type="primary" size="large">
+            <Link href="/products">View All Products</Link>
+          </Button>
+        </div>
       </div>
+      
+      <CategorySection />
+      
+      <Footer />
     </div>
   );
 }
