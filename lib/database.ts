@@ -1,8 +1,7 @@
-import initSqlJs from 'sql.js';
 import fs from 'fs';
 import path from 'path';
 
-let SQL: any = null;
+// Simple JSON-based database for easier setup
 let db: any = null;
 
 export interface User {
@@ -55,28 +54,30 @@ export interface OrderItem {
 }
 
 export async function initDatabase() {
-  if (SQL && db) return db;
+  if (db) return db;
 
   try {
-    SQL = await initSqlJs({
-      // You can specify the path to sql-wasm.wasm if needed
-    });
-
-    const dbPath = path.join(process.cwd(), 'database.sqlite');
+    const dbPath = path.join(process.cwd(), 'database.json');
     
     // Check if database file exists
     if (fs.existsSync(dbPath)) {
-      const filebuffer = fs.readFileSync(dbPath);
-      db = new SQL.Database(filebuffer);
+      const data = fs.readFileSync(dbPath, 'utf8');
+      db = JSON.parse(data);
     } else {
-      db = new SQL.Database();
+      // Create new database with sample data
+      db = {
+        users: [],
+        products: [],
+        cart: [],
+        orders: [],
+        order_items: [],
+        nextId: { users: 1, products: 1, cart: 1, orders: 1, order_items: 1 }
+      };
+      
+      // Insert sample data
+      insertSampleData();
+      saveDatabase();
     }
-
-    // Create tables
-    createTables();
-    
-    // Insert sample data
-    insertSampleData();
     
     return db;
   } catch (error) {
@@ -85,120 +86,166 @@ export async function initDatabase() {
   }
 }
 
-function createTables() {
-  // Users table - intentionally vulnerable design
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      name TEXT NOT NULL,
-      role TEXT DEFAULT 'user',
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      phone TEXT,
-      address TEXT,
-      credit_card TEXT
-    )
-  `);
-
-  // Products table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS products (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      description TEXT,
-      price REAL NOT NULL,
-      image_url TEXT,
-      category TEXT,
-      stock INTEGER DEFAULT 0,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `);
-
-  // Cart table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS cart (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
-      product_id INTEGER,
-      quantity INTEGER DEFAULT 1,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id),
-      FOREIGN KEY (product_id) REFERENCES products(id)
-    )
-  `);
-
-  // Orders table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS orders (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER,
-      total_amount REAL NOT NULL,
-      status TEXT DEFAULT 'pending',
-      shipping_address TEXT,
-      payment_method TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id)
-    )
-  `);
-
-  // Order items table
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS order_items (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      order_id INTEGER,
-      product_id INTEGER,
-      quantity INTEGER NOT NULL,
-      price REAL NOT NULL,
-      FOREIGN KEY (order_id) REFERENCES orders(id),
-      FOREIGN KEY (product_id) REFERENCES products(id)
-    )
-  `);
-}
-
 function insertSampleData() {
-  // Check if data already exists
-  const userCount = db.exec("SELECT COUNT(*) as count FROM users");
-  if (userCount[0]?.values[0][0] > 0) return;
-
   // Insert admin user (intentionally weak password)
-  db.exec(`
-    INSERT INTO users (email, password, name, role, phone, address, credit_card) VALUES 
-    ('admin@attackme.com', 'admin123', 'Admin User', 'admin', '1234567890', '123 Admin St', '4111111111111111')
-  `);
+  db.users.push({
+    id: db.nextId.users++,
+    email: 'admin@attackme.com',
+    password: 'admin123', // VULNERABILITY: Plain text password
+    name: 'Admin User',
+    role: 'admin',
+    created_at: new Date().toISOString(),
+    phone: '1234567890',
+    address: '123 Admin St',
+    credit_card: '4111111111111111' // VULNERABILITY: Plain text credit card
+  });
 
   // Insert sample users
-  db.exec(`
-    INSERT INTO users (email, password, name, role, phone, address, credit_card) VALUES 
-    ('john@example.com', 'password123', 'John Doe', 'user', '555-0123', '456 Main St', '4532015112830366'),
-    ('jane@example.com', 'password123', 'Jane Smith', 'user', '555-0124', '789 Oak Ave', '5555555555554444'),
-    ('test@test.com', 'test123', 'Test User', 'user', '555-0125', '321 Pine Rd', '4000000000000002')
-  `);
+  db.users.push(
+    {
+      id: db.nextId.users++,
+      email: 'john@example.com',
+      password: 'password123',
+      name: 'John Doe',
+      role: 'user',
+      created_at: new Date().toISOString(),
+      phone: '555-0123',
+      address: '456 Main St',
+      credit_card: '4532015112830366'
+    },
+    {
+      id: db.nextId.users++,
+      email: 'jane@example.com',
+      password: 'password123',
+      name: 'Jane Smith',
+      role: 'user',
+      created_at: new Date().toISOString(),
+      phone: '555-0124',
+      address: '789 Oak Ave',
+      credit_card: '5555555555554444'
+    },
+    {
+      id: db.nextId.users++,
+      email: 'test@test.com',
+      password: 'test123',
+      name: 'Test User',
+      role: 'user',
+      created_at: new Date().toISOString(),
+      phone: '555-0125',
+      address: '321 Pine Rd',
+      credit_card: '4000000000000002'
+    }
+  );
 
   // Insert sample products
-  db.exec(`
-    INSERT INTO products (name, description, price, image_url, category, stock) VALUES 
-    ('iPhone 15 Pro', 'Latest Apple smartphone with advanced camera system', 999.99, 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500', 'Electronics', 50),
-    ('MacBook Pro M3', 'Powerful laptop for professionals', 1999.99, 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500', 'Electronics', 25),
-    ('Samsung Galaxy S24', 'Android flagship with AI features', 799.99, 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500', 'Electronics', 40),
-    ('Nike Air Max 270', 'Comfortable running shoes', 150.00, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500', 'Fashion', 100),
-    ('Adidas Ultraboost 22', 'Premium running shoes', 180.00, 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=500', 'Fashion', 75),
-    ('Levi\'s 501 Jeans', 'Classic straight fit jeans', 89.99, 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500', 'Fashion', 200),
-    ('Nintendo Switch', 'Portable gaming console', 299.99, 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=500', 'Gaming', 30),
-    ('PlayStation 5', 'Next-gen gaming console', 499.99, 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=500', 'Gaming', 15),
-    ('Sony WH-1000XM5', 'Noise-canceling headphones', 399.99, 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500', 'Electronics', 60),
-    ('Apple Watch Series 9', 'Smartwatch with health monitoring', 399.99, 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=500', 'Electronics', 35)
-  `);
-
-  // Save database to file
-  saveDatabase();
+  db.products.push(
+    {
+      id: db.nextId.products++,
+      name: 'iPhone 15 Pro',
+      description: 'Latest Apple smartphone with advanced camera system',
+      price: 999.99,
+      image_url: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500',
+      category: 'Electronics',
+      stock: 50,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: db.nextId.products++,
+      name: 'MacBook Pro M3',
+      description: 'Powerful laptop for professionals',
+      price: 1999.99,
+      image_url: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500',
+      category: 'Electronics',
+      stock: 25,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: db.nextId.products++,
+      name: 'Samsung Galaxy S24',
+      description: 'Android flagship with AI features',
+      price: 799.99,
+      image_url: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500',
+      category: 'Electronics',
+      stock: 40,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: db.nextId.products++,
+      name: 'Nike Air Max 270',
+      description: 'Comfortable running shoes',
+      price: 150.00,
+      image_url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500',
+      category: 'Fashion',
+      stock: 100,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: db.nextId.products++,
+      name: 'Adidas Ultraboost 22',
+      description: 'Premium running shoes',
+      price: 180.00,
+      image_url: 'https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=500',
+      category: 'Fashion',
+      stock: 75,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: db.nextId.products++,
+      name: 'Levi\'s 501 Jeans',
+      description: 'Classic straight fit jeans',
+      price: 89.99,
+      image_url: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500',
+      category: 'Fashion',
+      stock: 200,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: db.nextId.products++,
+      name: 'Nintendo Switch',
+      description: 'Portable gaming console',
+      price: 299.99,
+      image_url: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=500',
+      category: 'Gaming',
+      stock: 30,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: db.nextId.products++,
+      name: 'PlayStation 5',
+      description: 'Next-gen gaming console',
+      price: 499.99,
+      image_url: 'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=500',
+      category: 'Gaming',
+      stock: 15,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: db.nextId.products++,
+      name: 'Sony WH-1000XM5',
+      description: 'Noise-canceling headphones',
+      price: 399.99,
+      image_url: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500',
+      category: 'Electronics',
+      stock: 60,
+      created_at: new Date().toISOString()
+    },
+    {
+      id: db.nextId.products++,
+      name: 'Apple Watch Series 9',
+      description: 'Smartwatch with health monitoring',
+      price: 399.99,
+      image_url: 'https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=500',
+      category: 'Electronics',
+      stock: 35,
+      created_at: new Date().toISOString()
+    }
+  );
 }
 
 export function saveDatabase() {
   if (db) {
-    const data = db.export();
-    const buffer = Buffer.from(data);
-    fs.writeFileSync(path.join(process.cwd(), 'database.sqlite'), buffer);
+    const dbPath = path.join(process.cwd(), 'database.json');
+    fs.writeFileSync(dbPath, JSON.stringify(db, null, 2));
   }
 }
 
@@ -211,98 +258,50 @@ export function getDatabase() {
 
 // Vulnerable query functions (intentionally unsafe)
 export function getUserByEmail(email: string): User | null {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection - direct string concatenation
-  const query = `SELECT * FROM users WHERE email = '${email}'`;
-  const result = db.exec(query);
-  
-  if (result.length > 0 && result[0].values.length > 0) {
-    const row = result[0].values[0];
-    return {
-      id: row[0],
-      email: row[1],
-      password: row[2],
-      name: row[3],
-      role: row[4],
-      created_at: row[5],
-      phone: row[6],
-      address: row[7],
-      credit_card: row[8]
-    };
-  }
-  return null;
+  const database = getDatabase();
+  // VULNERABILITY: No input validation, direct search
+  return database.users.find((user: User) => user.email === email) || null;
 }
 
 export function getAllProducts(): Product[] {
-  const db = getDatabase();
-  const result = db.exec("SELECT * FROM products ORDER BY created_at DESC");
-  
-  if (result.length > 0) {
-    return result[0].values.map((row: any[]) => ({
-      id: row[0],
-      name: row[1],
-      description: row[2],
-      price: row[3],
-      image_url: row[4],
-      category: row[5],
-      stock: row[6],
-      created_at: row[7]
-    }));
-  }
-  return [];
+  const database = getDatabase();
+  return database.products.sort((a: Product, b: Product) => 
+    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 }
 
 export function getProductById(id: string): Product | null {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection
-  const query = `SELECT * FROM products WHERE id = ${id}`;
-  const result = db.exec(query);
-  
-  if (result.length > 0 && result[0].values.length > 0) {
-    const row = result[0].values[0];
-    return {
-      id: row[0],
-      name: row[1],
-      description: row[2],
-      price: row[3],
-      image_url: row[4],
-      category: row[5],
-      stock: row[6],
-      created_at: row[7]
-    };
-  }
-  return null;
+  const database = getDatabase();
+  // VULNERABILITY: No input validation
+  const productId = parseInt(id);
+  return database.products.find((product: Product) => product.id === productId) || null;
 }
 
 export function searchProducts(searchTerm: string): Product[] {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection
-  const query = `SELECT * FROM products WHERE name LIKE '%${searchTerm}%' OR description LIKE '%${searchTerm}%'`;
-  const result = db.exec(query);
-  
-  if (result.length > 0) {
-    return result[0].values.map((row: any[]) => ({
-      id: row[0],
-      name: row[1],
-      description: row[2],
-      price: row[3],
-      image_url: row[4],
-      category: row[5],
-      stock: row[6],
-      created_at: row[7]
-    }));
-  }
-  return [];
+  const database = getDatabase();
+  // VULNERABILITY: No input sanitization, direct string matching
+  return database.products.filter((product: Product) => 
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 }
 
 export function createUser(email: string, password: string, name: string): User | null {
-  const db = getDatabase();
+  const database = getDatabase();
   try {
-    // VULNERABILITY: SQL Injection
-    const query = `INSERT INTO users (email, password, name) VALUES ('${email}', '${password}', '${name}')`;
-    db.exec(query);
+    // VULNERABILITY: No input validation, no duplicate checking
+    const newUser: User = {
+      id: database.nextId.users++,
+      email,
+      password, // VULNERABILITY: Stored in plain text
+      name,
+      role: 'user',
+      created_at: new Date().toISOString()
+    };
     
-    return getUserByEmail(email);
+    database.users.push(newUser);
+    saveDatabase();
+    return newUser;
   } catch (error) {
     console.error('Error creating user:', error);
     return null;
@@ -310,102 +309,92 @@ export function createUser(email: string, password: string, name: string): User 
 }
 
 export function addToCart(userId: number, productId: number, quantity: number = 1) {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection
-  const query = `INSERT INTO cart (user_id, product_id, quantity) VALUES (${userId}, ${productId}, ${quantity})`;
-  db.exec(query);
+  const database = getDatabase();
+  // VULNERABILITY: No validation of user/product existence
+  const cartItem: CartItem = {
+    id: database.nextId.cart++,
+    user_id: userId,
+    product_id: productId,
+    quantity,
+    created_at: new Date().toISOString()
+  };
+  
+  database.cart.push(cartItem);
   saveDatabase();
 }
 
 export function getCartItems(userId: number) {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection
-  const query = `SELECT c.*, p.name, p.price, p.image_url FROM cart c JOIN products p ON c.product_id = p.id WHERE c.user_id = ${userId}`;
-  const result = db.exec(query);
+  const database = getDatabase();
+  // VULNERABILITY: No authorization check
+  const cartItems = database.cart.filter((item: CartItem) => item.user_id === userId);
   
-  if (result.length > 0) {
-    return result[0].values.map((row: any[]) => ({
-      id: row[0],
-      user_id: row[1],
-      product_id: row[2],
-      quantity: row[3],
-      created_at: row[4],
-      name: row[5],
-      price: row[6],
-      image_url: row[7]
-    }));
-  }
-  return [];
+  return cartItems.map((item: CartItem) => {
+    const product = database.products.find((p: Product) => p.id === item.product_id);
+    return {
+      id: item.id,
+      user_id: item.user_id,
+      product_id: item.product_id,
+      quantity: item.quantity,
+      created_at: item.created_at,
+      name: product?.name || 'Unknown Product',
+      price: product?.price || 0,
+      image_url: product?.image_url || ''
+    };
+  });
 }
 
 export function removeFromCart(cartId: number) {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection
-  const query = `DELETE FROM cart WHERE id = ${cartId}`;
-  db.exec(query);
-  saveDatabase();
+  const database = getDatabase();
+  // VULNERABILITY: No authorization check
+  const index = database.cart.findIndex((item: CartItem) => item.id === cartId);
+  if (index > -1) {
+    database.cart.splice(index, 1);
+    saveDatabase();
+  }
 }
 
 export function createOrder(userId: number, totalAmount: number, shippingAddress: string, paymentMethod: string) {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection
-  const query = `INSERT INTO orders (user_id, total_amount, shipping_address, payment_method) VALUES (${userId}, ${totalAmount}, '${shippingAddress}', '${paymentMethod}')`;
-  db.exec(query);
+  const database = getDatabase();
+  // VULNERABILITY: No validation
+  const order: Order = {
+    id: database.nextId.orders++,
+    user_id: userId,
+    total_amount: totalAmount,
+    status: 'pending',
+    shipping_address: shippingAddress,
+    payment_method: paymentMethod,
+    created_at: new Date().toISOString()
+  };
   
-  // Get the last inserted order ID
-  const result = db.exec("SELECT last_insert_rowid() as id");
-  const orderId = result[0].values[0][0];
-  
+  database.orders.push(order);
   saveDatabase();
-  return orderId;
+  return order.id;
 }
 
 export function addOrderItem(orderId: number, productId: number, quantity: number, price: number) {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection
-  const query = `INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (${orderId}, ${productId}, ${quantity}, ${price})`;
-  db.exec(query);
+  const database = getDatabase();
+  // VULNERABILITY: No validation
+  const orderItem: OrderItem = {
+    id: database.nextId.order_items++,
+    order_id: orderId,
+    product_id: productId,
+    quantity,
+    price
+  };
+  
+  database.order_items.push(orderItem);
   saveDatabase();
 }
 
 export function getUserOrders(userId: number) {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection
-  const query = `SELECT * FROM orders WHERE user_id = ${userId} ORDER BY created_at DESC`;
-  const result = db.exec(query);
-  
-  if (result.length > 0) {
-    return result[0].values.map((row: any[]) => ({
-      id: row[0],
-      user_id: row[1],
-      total_amount: row[2],
-      status: row[3],
-      shipping_address: row[4],
-      payment_method: row[5],
-      created_at: row[6]
-    }));
-  }
-  return [];
+  const database = getDatabase();
+  // VULNERABILITY: No authorization check
+  return database.orders.filter((order: Order) => order.user_id === userId)
+    .sort((a: Order, b: Order) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
 export function getAllUsers() {
-  const db = getDatabase();
-  // VULNERABILITY: SQL Injection - exposes all user data
-  const query = `SELECT * FROM users`;
-  const result = db.exec(query);
-  
-  if (result.length > 0) {
-    return result[0].values.map((row: any[]) => ({
-      id: row[0],
-      email: row[1],
-      password: row[2],
-      name: row[3],
-      role: row[4],
-      created_at: row[5],
-      phone: row[6],
-      address: row[7],
-      credit_card: row[8]
-    }));
-  }
-  return [];
+  const database = getDatabase();
+  // VULNERABILITY: No authorization check - exposes all user data
+  return database.users;
 }

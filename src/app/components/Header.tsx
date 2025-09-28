@@ -47,7 +47,7 @@ export default function Header({ user, cartCount, onLogout, onSearch }: HeaderPr
             </Link>
           </div>
           
-          <div className="flex-1 max-w-lg mx-8">
+          <div className="flex-1 max-w-lg mx-8 flex items-center">
             <Search
               placeholder="Search products..."
               allowClear
@@ -56,6 +56,7 @@ export default function Header({ user, cartCount, onLogout, onSearch }: HeaderPr
               onSearch={handleSearch}
               enterButton={<SearchOutlined />}
               size="large"
+              className="w-full"
             />
           </div>
           
@@ -68,7 +69,7 @@ export default function Header({ user, cartCount, onLogout, onSearch }: HeaderPr
             
             {user ? (
               <Dropdown overlay={userMenu} placement="bottomRight">
-                <Button type="text" className="flex items-center">
+                <Button type="text" className="flex items-center h-10">
                   <Avatar size="small" icon={<UserOutlined />} />
                   <span className="ml-2">{user.name}</span>
                 </Button>
@@ -76,10 +77,10 @@ export default function Header({ user, cartCount, onLogout, onSearch }: HeaderPr
             ) : (
               <Space>
                 <Link href="/login">
-                  <Button icon={<LoginOutlined />}>Login</Button>
+                  <Button icon={<LoginOutlined />} size="large">Login</Button>
                 </Link>
                 <Link href="/register">
-                  <Button type="primary">Sign Up</Button>
+                  <Button type="primary" size="large">Sign Up</Button>
                 </Link>
               </Space>
             )}

@@ -1,0 +1,160 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@attackme.com",
+      "password": "admin123",
+      "name": "Admin User",
+      "role": "admin",
+      "created_at": "2025-09-28T17:39:18.782Z",
+      "phone": "1234567890",
+      "address": "123 Admin St",
+      "credit_card": "4111111111111111"
+    },
+    {
+      "id": 2,
+      "email": "john@example.com",
+      "password": "password123",
+      "name": "John Doe",
+      "role": "user",
+      "created_at": "2025-09-28T17:39:18.785Z",
+      "phone": "555-0123",
+      "address": "456 Main St",
+      "credit_card": "4532015112830366"
+    },
+    {
+      "id": 3,
+      "email": "jane@example.com",
+      "password": "password123",
+      "name": "Jane Smith",
+      "role": "user",
+      "created_at": "2025-09-28T17:39:18.785Z",
+      "phone": "555-0124",
+      "address": "789 Oak Ave",
+      "credit_card": "5555555555554444"
+    },
+    {
+      "id": 4,
+      "email": "test@test.com",
+      "password": "test123",
+      "name": "Test User",
+      "role": "user",
+      "created_at": "2025-09-28T17:39:18.785Z",
+      "phone": "555-0125",
+      "address": "321 Pine Rd",
+      "credit_card": "4000000000000002"
+    }
+  ],
+  "products": [
+    {
+      "id": 1,
+      "name": "iPhone 15 Pro",
+      "description": "Latest Apple smartphone with advanced camera system",
+      "price": 999.99,
+      "image_url": "https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=500",
+      "category": "Electronics",
+      "stock": 50,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    },
+    {
+      "id": 2,
+      "name": "MacBook Pro M3",
+      "description": "Powerful laptop for professionals",
+      "price": 1999.99,
+      "image_url": "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=500",
+      "category": "Electronics",
+      "stock": 25,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    },
+    {
+      "id": 3,
+      "name": "Samsung Galaxy S24",
+      "description": "Android flagship with AI features",
+      "price": 799.99,
+      "image_url": "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500",
+      "category": "Electronics",
+      "stock": 40,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    },
+    {
+      "id": 4,
+      "name": "Nike Air Max 270",
+      "description": "Comfortable running shoes",
+      "price": 150,
+      "image_url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=500",
+      "category": "Fashion",
+      "stock": 100,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    },
+    {
+      "id": 5,
+      "name": "Adidas Ultraboost 22",
+      "description": "Premium running shoes",
+      "price": 180,
+      "image_url": "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?w=500",
+      "category": "Fashion",
+      "stock": 75,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    },
+    {
+      "id": 6,
+      "name": "Levi's 501 Jeans",
+      "description": "Classic straight fit jeans",
+      "price": 89.99,
+      "image_url": "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500",
+      "category": "Fashion",
+      "stock": 200,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    },
+    {
+      "id": 7,
+      "name": "Nintendo Switch",
+      "description": "Portable gaming console",
+      "price": 299.99,
+      "image_url": "https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=500",
+      "category": "Gaming",
+      "stock": 30,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    },
+    {
+      "id": 8,
+      "name": "PlayStation 5",
+      "description": "Next-gen gaming console",
+      "price": 499.99,
+      "image_url": "https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=500",
+      "category": "Gaming",
+      "stock": 15,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    },
+    {
+      "id": 9,
+      "name": "Sony WH-1000XM5",
+      "description": "Noise-canceling headphones",
+      "price": 399.99,
+      "image_url": "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500",
+      "category": "Electronics",
+      "stock": 60,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    },
+    {
+      "id": 10,
+      "name": "Apple Watch Series 9",
+      "description": "Smartwatch with health monitoring",
+      "price": 399.99,
+      "image_url": "https://images.unsplash.com/photo-1434493789847-2f02dc6ca35d?w=500",
+      "category": "Electronics",
+      "stock": 35,
+      "created_at": "2025-09-28T17:39:18.786Z"
+    }
+  ],
+  "cart": [],
+  "orders": [],
+  "order_items": [],
+  "nextId": {
+    "users": 5,
+    "products": 11,
+    "cart": 1,
+    "orders": 1,
+    "order_items": 1
+  }
+}
