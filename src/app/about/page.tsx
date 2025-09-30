@@ -34,8 +34,8 @@ export default function AboutPage() {
             Your trusted online shopping destination for premium electronics, fashion, and gaming products. 
             We're committed to providing exceptional value and service to our customers worldwide.
           </Paragraph>
-        </div>
-
+            </div>
+            
         {/* Stats Section */}
         <Row gutter={[24, 24]} className="mb-16">
           <Col xs={24} sm={6}>
@@ -144,8 +144,8 @@ export default function AboutPage() {
               </Card>
             </Col>
           </Row>
-        </div>
-
+            </div>
+            
         {/* Timeline */}
         <div className="mb-16">
           <Title level={2} className="text-center mb-12">Our Journey</Title>
@@ -157,7 +157,7 @@ export default function AboutPage() {
                     <div>
                       <Title level={4}>2019 - The Beginning</Title>
                       <Paragraph>Founded Attack Me with a vision to democratize access to premium products.</Paragraph>
-                    </div>
+            </div>
                   ),
                 },
                 {
@@ -165,23 +165,23 @@ export default function AboutPage() {
                     <div>
                       <Title level={4}>2020 - First Million</Title>
                       <Paragraph>Reached our first million in sales and expanded to 10 countries.</Paragraph>
-                    </div>
+            </div>
                   ),
                 },
                 {
                   children: (
-                    <div>
+                <div>
                       <Title level={4}>2021 - Product Expansion</Title>
                       <Paragraph>Launched our fashion and gaming categories, tripling our product range.</Paragraph>
-                    </div>
+                </div>
                   ),
                 },
                 {
                   children: (
-                    <div>
+                <div>
                       <Title level={4}>2022 - Global Growth</Title>
                       <Paragraph>Expanded to 25 countries and reached 10,000 happy customers.</Paragraph>
-                    </div>
+                </div>
                   ),
                 },
                 {
@@ -189,7 +189,7 @@ export default function AboutPage() {
                     <div>
                       <Title level={4}>2023 - Innovation</Title>
                       <Paragraph>Introduced AI-powered recommendations and mobile-first shopping experience.</Paragraph>
-                    </div>
+              </div>
                   ),
                 },
                 {
@@ -197,14 +197,14 @@ export default function AboutPage() {
                     <div>
                       <Title level={4}>2024 - The Future</Title>
                       <Paragraph>Continuing to innovate and expand while maintaining our core values.</Paragraph>
-                    </div>
+            </div>
                   ),
                 },
               ]}
             />
           </Card>
-        </div>
-
+          </div>
+          
         {/* CTA Section */}
         <Card className="text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white">
           <Title level={2} className="text-white mb-4">
